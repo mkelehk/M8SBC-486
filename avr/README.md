@@ -32,7 +32,7 @@ Small AVR firmware that configures the FPGA from on-chip flash at power-up, stor
 
 ## Flashing
 - Example with correct fuses for this project:
-  - `avrdude -c avrisp -P /dev/ttyUSB0 -b 115200 -p m128 -U flash:w:fpga_loader.hex:i -U lfuse:w:0x3F:m -U hfuse:w:0xD6:m -U efuse:w:0xFF:m`
+  - `avrdude -c usbasp -p m128 -U flash:w:fpga_loader.hex:i -U lfuse:w:0x3F:m -U hfuse:w:0xD7:m -U efuse:w:0xFF:m`
 
 ## Runtime behavior
 - Debug UART: UART1 57600 8N1 on TX1 (PD3)
