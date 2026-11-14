@@ -106,6 +106,11 @@ static void uart1_putc(char c) {
 static void spi_init_fast(void) {
     SPI_DDR |= (1<<PB1) | (1<<PB2) | (1<<PB0); // SCK, MOSI, SS as outputs
     SPI_PORT |= (1<<PB0); // keep SS high (inactive)
+	
+    // 4MHz:  SPI2X=0, SPR1=0, SPR0=1  ¡ú 16MHz / 4 = 4MHz
+    // SPCR = (1<<SPE) | (1<<MSTR) | (1<<SPR0);
+    // SPSR &= ~(1<<SPI2X);
+    // 8MHz:
     SPCR = (1<<SPE) | (1<<MSTR); // enable SPI, master, def mode 0
     SPSR |= (1<<SPI2X); // fosc/2 
 }

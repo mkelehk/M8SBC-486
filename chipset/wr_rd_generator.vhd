@@ -60,6 +60,9 @@ BEGIN
 
 
 	SYNC_PROC: PROCESS (CLK)
+		-- Total wait states required by this transfer, computed in the same cycle
+		-- (kept consistent with the approach used in ram_driver)
+		VARIABLE ws_total : INTEGER RANGE 0 to 127;
    BEGIN
       IF(RISING_EDGE(CLK)) THEN
          IF (RESET = '1') THEN
@@ -72,18 +75,30 @@ BEGIN
 				EXTRA_WS <= '0';
 				LAST_CS <= '1';
          ELSE
+				-- Compute the wait states for the current cycle: add NCOUNT when
+				-- the access switches to a different device
+				-- NOTE: do not use the SET_WAITSTATES register here. It still holds
+				-- the value of the previous transfer, so the first ROM fetch after
+				-- reset would be treated as "zero wait state": RDY is released at
+				-- once and the CPU samples ROM data before it is valid, fetching an
+				-- illegal instruction and halting
+				IF (LAST_CS /= EN_WRRD) AND (NACTIVE = '1') THEN
+					ws_total := WAITSTATE_CNT + NCOUNT;
+				ELSE
+					ws_total := WAITSTATE_CNT;
+				END IF;
+
 				IF drv_state = st1_wait_for_ads THEN
 					IF drv_next_state = st2_wait_state THEN -- on toggle from s1 to s2
 						
+						SET_WAITSTATES <= ws_total;
 						IF (LAST_CS /= EN_WRRD) AND (NACTIVE = '1') THEN
-							SET_WAITSTATES <= WAITSTATE_CNT + NCOUNT;
 							EXTRA_WS <= '1'; -- to check
 						ELSE 
-							SET_WAITSTATES <= WAITSTATE_CNT;
 							EXTRA_WS <= '0';
 						END IF;
 						
-						IF SET_WAITSTATES > 0 THEN -- go instantly high to indicate wait
+						IF ws_total > 0 THEN -- go instantly high to indicate wait
 							RDY_I <= '1';
 						ELSE 
 							RDY_I <= '0';

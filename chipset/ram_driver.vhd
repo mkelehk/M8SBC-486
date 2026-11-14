@@ -98,8 +98,11 @@ BEGIN
 
 	SYNC_PROC: PROCESS (CLK)
 		VARIABLE ram_waitstates_total	: INTEGER;
-		VARIABLE d_cs0 : STD_LOGIC;
-		VARIABLE d_cs1 : STD_LOGIC;
+		-- NOTE: local VARIABLE d_cs0/d_cs1 used to be declared here, shadowing the
+		-- architecture-level signals of the same name and never being assigned.
+		-- They stayed 'U' in simulation and were constant-folded to 0 in synthesis,
+		-- so the "same bank continuous read" check never worked as intended.
+		-- Removed: use the real d_cs0/d_cs1 signals driven by CSDEC.
    BEGIN
       IF(RISING_EDGE(CLK)) THEN
          IF (RESET = '1') THEN
